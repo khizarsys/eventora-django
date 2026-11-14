@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Booking {{ booking.reference }}{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width: 720px;">
+  <div class="text-center mb-4">
+    {% if booking.is_confirmed %}
+      <span class="d-inline-grid rounded-circle bg-success-subtle text-success mb-3" style="width:64px;height:64px;place-items:center;font-size:2rem;"><i class="bi bi-check-lg"></i></span>
+      <h1 class="h3 fw-bold">You're going!</h1>
+      <p class="text-secondary">Your booking is confirmed. A confirmation email has been sent to <strong>{{ booking.attendee.email }}</strong>.</p>
+    {% else %}
+      <span class="d-inline-grid rounded-circle bg-secondary-subtle text-secondary mb-3" style="width:64px;height:64px;place-items:center;font-size:2rem;"><i class="bi bi-x-lg"></i></span>
+      <h1 class="h3 fw-bold">Booking cancelled</h1>
+      <p class="text-secondary">This booking was cancelled on {{ booking.cancelled_at|date:"F j, Y" }}.</p>
+    {% endif %}
+  </div>
+
+  <div class="ticket p-4 p-md-5">
+    <div class="d-flex justify-content-between flex-wrap gap-3 mb-4">
+      <div>
+        <div class="small text-secondary text-uppercase fw-bold">Booking reference</div>
+        <div class="reference fw-bold text-primary">{{ booking.reference }}</div>
+      </div>
+      <div class="text-md-end">
+        <div class="small text-secondary text-uppercase fw-bold">Status</div>
+        <span class="badge fs-6 {% if booking.is_confirmed %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ booking.get_status_display }}</span>
+      </div>
+    </div>
+
+    <h2 class="h4 fw-bold mb-3">{{ booking.event.title }}</h2>
+    <div class="row g-3 small">
+      <div class="col-sm-6"><i class="bi bi-calendar3 text-primary me-2"></i>{{ booking.event.starts_at|date:"l, F j, Y" }}</div>
+      <div class="col-sm-6"><i class="bi bi-clock text-primary me-2"></i>{{ booking.event.starts_at|date:"g:i A" }}{% if booking.event.ends_at %} – {{ booking.event.ends_at|date:"g:i A" }}{% endif %}</div>
+      <div class="col-sm-6"><i class="bi bi-geo-alt text-primary me-2"></i>{{ booking.event.venue }}, {{ booking.event.city }}</div>
+      <div class="col-sm-6"><i class="bi bi-person text-primary me-2"></i>{{ booking.attendee.get_full_name|default:booking.attendee.username }}</div>
+    </div>
+    <hr class="my-4">
+    <div class="d-flex justify-content-between"><span class="text-secondary">Seats</span><span class="fw-semibold">{{ booking.seats }}</span></div>
+    <div class="d-flex justify-content-between"><span class="text-secondary">Price per seat</span><span class="fw-semibold">{% if booking.unit_price %}PKR {{ booking.unit_price|floatformat:0|intcomma }}{% else %}Free{% endif %}</span></div>
+    <div class="d-flex justify-content-between fs-5 mt-2"><span class="fw-bold">Total</span><span class="fw-bold">{% if booking.total_price %}PKR {{ booking.total_price|floatformat:0|intcomma }}{% else %}Free{% endif %}</span></div>
+    {% if booking.total_price %}<p class="small text-secondary mt-2 mb-0">Payment is collected at the venue entrance.</p>{% endif %}
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
+    <a href="{% url 'bookings:my_bookings' %}" class="btn btn-primary">Go to My Bookings</a>
+    <a href="{% url 'events:list' %}" class="btn btn-outline-secondary">Browse more events</a>
+  </div>
+</div>
+{% endblock %}

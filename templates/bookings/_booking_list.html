@@ -1,0 +1,44 @@
+{% load humanize %}
+{% if bookings %}
+  <div class="d-flex flex-column gap-3">
+    {% for booking in bookings %}
+      <div class="card p-3">
+        <div class="row g-3 align-items-center">
+          <div class="col-auto">
+            <div class="date-chip">
+              <span class="month">{{ booking.event.starts_at|date:"M" }}</span>
+              <span class="day">{{ booking.event.starts_at|date:"j" }}</span>
+            </div>
+          </div>
+          <div class="col">
+            <a href="{{ booking.event.get_absolute_url }}" class="fw-bold text-decoration-none">{{ booking.event.title }}</a>
+            <div class="small text-secondary">
+              {{ booking.event.starts_at|date:"D, M j · g:i A" }} · {{ booking.event.venue }}, {{ booking.event.city }}
+            </div>
+            <div class="small mt-1">
+              <span class="font-monospace">{{ booking.reference }}</span> ·
+              {{ booking.seats }} seat{{ booking.seats|pluralize }} ·
+              {% if booking.total_price %}PKR {{ booking.total_price|floatformat:0|intcomma }}{% else %}Free{% endif %}
+            </div>
+          </div>
+          <div class="col-md-auto d-flex gap-2">
+            <a href="{% url 'bookings:confirmation' booking.reference %}" class="btn btn-sm btn-outline-primary">View ticket</a>
+            {% if booking.can_cancel %}
+              <form method="post" action="{% url 'bookings:cancel' booking.reference %}"
+                    onsubmit="return confirm('Cancel this booking and release your seats?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card empty-state">
+    <i class="bi bi-ticket-perforated d-block mb-3"></i>
+    <p class="mb-3">{{ empty_text }}</p>
+    {% if show_browse %}<div><a href="{% url 'events:list' %}" class="btn btn-primary">Browse events</a></div>{% endif %}
+  </div>
+{% endif %}

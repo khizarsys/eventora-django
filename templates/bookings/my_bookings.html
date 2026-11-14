@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}My bookings{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="h3 fw-bold mb-1">My bookings</h1>
+  <p class="text-secondary mb-4">All your tickets in one place.</p>
+
+  <ul class="nav nav-pills mb-4" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#upcoming" type="button" role="tab">Upcoming <span class="badge text-bg-light ms-1">{{ upcoming|length }}</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#past" type="button" role="tab">Past <span class="badge text-bg-light ms-1">{{ past|length }}</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#cancelled" type="button" role="tab">Cancelled <span class="badge text-bg-light ms-1">{{ cancelled|length }}</span></button></li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+      {% include "bookings/_booking_list.html" with bookings=upcoming empty_text="You have no upcoming bookings." show_browse=True %}
+    </div>
+    <div class="tab-pane fade" id="past" role="tabpanel">
+      {% include "bookings/_booking_list.html" with bookings=past empty_text="No past events yet." %}
+    </div>
+    <div class="tab-pane fade" id="cancelled" role="tabpanel">
+      {% include "bookings/_booking_list.html" with bookings=cancelled empty_text="No cancelled bookings." %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% autoescape off %}Hi {{ user.first_name|default:user.username }},
+
+Your booking is confirmed. Here are your ticket details:
+
+  Event:      {{ event.title }}
+  Date:       {{ event.starts_at|date:"l, F j, Y" }} at {{ event.starts_at|date:"g:i A" }}
+  Venue:      {{ event.venue }}, {{ event.city }}
+  Seats:      {{ booking.seats }}
+  Total:      {% if booking.total_price %}PKR {{ booking.total_price|floatformat:0 }}{% else %}Free{% endif %}
+  Reference:  {{ booking.reference }}
+
+Please show your booking reference at the entrance.
+You can cancel free of charge from "My Bookings" until the event starts.
+
+See you there!
+The Eventora Team
+{% endautoescape %}
