@@ -1,0 +1,37 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# New > Blueprint in the Render dashboard, then select this repository.
+
+databases:
+  - name: eventora-db
+    plan: free
+    databaseName: eventora
+    user: eventora
+
+services:
+  - type: web
+    name: eventora
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn eventora.wsgi:application --workers 2 --timeout 60
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DATABASE_URL
+        fromDatabase:
+          name: eventora-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: SEED_DEMO_DATA
+        value: "True"
+      # Set these three in the dashboard (Render prompts for them on first deploy).
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false

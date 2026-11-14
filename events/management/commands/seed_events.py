@@ -105,7 +105,10 @@ class Command(BaseCommand):
             deleted, _ = User.objects.filter(email__in=demo_emails).delete()
             self.stdout.write(self.style.WARNING(f"Removed existing demo data ({deleted} rows)."))
         elif Event.objects.filter(organizer__email__in=demo_emails).exists():
-            self.stdout.write("Demo data already exists. Use --reset to recreate it.")
+            restored = self._restore_missing_banners(demo_emails)
+            self.stdout.write(
+                f"Demo data already exists ({restored} missing banner(s) regenerated). Use --reset to recreate it."
+            )
             return
 
         random.seed(42)  # repeatable demo data
@@ -121,6 +124,21 @@ class Command(BaseCommand):
         ))
         self.stdout.write(f"Demo password for all demo accounts: {DEMO_PASSWORD}")
         self.stdout.write(f"  Organizer: {ORGANIZERS[0][0]}   Attendee: {ATTENDEES[0][0]}")
+
+    def _restore_missing_banners(self, demo_emails):
+        """
+        Hosts without a persistent disk (e.g. Render's free tier) lose uploaded
+        files on every deploy. Regenerate demo banners whose files are gone.
+        """
+        colors = {name: palette for name, _, palette in CATEGORIES}
+        restored = 0
+        for event in Event.objects.filter(organizer__email__in=demo_emails).select_related("category"):
+            if event.banner and event.banner.storage.exists(event.banner.name):
+                continue
+            palette = colors.get(event.category.name, ("#4a3bc4", "#e96aa8"))
+            event.banner.save(f"{event.slug}.jpg", ContentFile(make_banner(event.title, event.category.name, palette)))
+            restored += 1
+        return restored
 
     def _create_categories(self):
         categories = {}

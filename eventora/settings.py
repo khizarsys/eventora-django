@@ -149,6 +149,8 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Eventora <no-reply@eventor
 
 # --- Security (production only) ---------------------------------------------
 
+# Render terminates TLS at its proxy and already redirects HTTP to HTTPS,
+# so SECURE_SSL_REDIRECT is left off to keep internal health checks simple.
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
