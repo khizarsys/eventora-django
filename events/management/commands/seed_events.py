@@ -16,7 +16,7 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter
 
 from accounts.models import User
 from bookings.models import Booking
@@ -185,59 +185,45 @@ def _hex_to_rgb(value):
     return tuple(int(value[i:i + 2], 16) for i in (0, 2, 4))
 
 
-def _font(size):
-    """Use a nice system font when available, otherwise Pillow's built-in one."""
-    for name in ("seguisb.ttf", "arialbd.ttf", "DejaVuSans-Bold.ttf", "Arial Bold.ttf"):
-        try:
-            return ImageFont.truetype(name, size)
-        except OSError:
-            continue
-    return ImageFont.load_default(size=size)
-
-
-def make_banner(title, category, colors, size=(1200, 600)):
-    """Generate a gradient banner image with decorative shapes and the event title."""
+def make_banner(title, category, colors, size=(1280, 720)):
+    """
+    Generate a 16:9 abstract banner: diagonal gradient, soft light blobs and a
+    dotted grid. No text is drawn, so cards and the detail page can overlay
+    badges and titles without clashing with the artwork.
+    """
     width, height = size
     start, end = _hex_to_rgb(colors[0]), _hex_to_rgb(colors[1])
 
-    # Diagonal gradient.
-    image = Image.new("RGB", size)
-    pixels = image.load()
-    for x in range(width):
-        for y in range(0, height, 2):
-            t = (x / width) * 0.7 + (y / height) * 0.3
-            color = tuple(int(start[i] + (end[i] - start[i]) * t) for i in range(3))
-            pixels[x, y] = color
-            if y + 1 < height:
-                pixels[x, y + 1] = color
+    # Draw the gradient on a small canvas and upscale it: smooth and fast.
+    small_w, small_h = 64, 36
+    gradient = Image.new("RGB", (small_w, small_h))
+    for x in range(small_w):
+        for y in range(small_h):
+            t = (x / small_w) * 0.7 + (y / small_h) * 0.3
+            gradient.putpixel((x, y), tuple(int(start[i] + (end[i] - start[i]) * t) for i in range(3)))
+    image = gradient.resize(size, Image.Resampling.BICUBIC).convert("RGBA")
 
-    # Soft decorative circles.
-    overlay = Image.new("RGBA", size, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay)
-    rng = random.Random(title)
-    for _ in range(6):
-        r = rng.randint(80, 260)
+    # Soft light blobs, positioned deterministically per event title.
+    rng = random.Random(f"{category}:{title}")
+    blobs = Image.new("RGBA", size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(blobs)
+    for _ in range(7):
+        r = rng.randint(90, 300)
         cx, cy = rng.randint(0, width), rng.randint(0, height)
-        draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(255, 255, 255, rng.randint(18, 40)))
-    overlay = overlay.filter(ImageFilter.GaussianBlur(6))
-    image = Image.alpha_composite(image.convert("RGBA"), overlay)
+        draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(255, 255, 255, rng.randint(16, 38)))
+    image = Image.alpha_composite(image, blobs.filter(ImageFilter.GaussianBlur(10)))
 
-    # Category label and wrapped title.
-    draw = ImageDraw.Draw(image)
-    draw.text((70, 70), category.upper(), font=_font(30), fill=(255, 255, 255, 210))
-    lines, line = [], ""
-    for word in title.split():
-        candidate = f"{line} {word}".strip()
-        if draw.textlength(candidate, font=_font(68)) > width - 140 and line:
-            lines.append(line)
-            line = word
-        else:
-            line = candidate
-    lines.append(line)
-    y = height - 90 - len(lines) * 80
-    for text in lines:
-        draw.text((70, y), text, font=_font(68), fill="white")
-        y += 80
+    # Dotted grid in one corner and a couple of thin rings for texture.
+    detail = Image.new("RGBA", size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(detail)
+    for gx in range(width - 340, width - 60, 28):
+        for gy in range(60, 300, 28):
+            draw.ellipse((gx - 3, gy - 3, gx + 3, gy + 3), fill=(255, 255, 255, 70))
+    for _ in range(2):
+        r = rng.randint(140, 260)
+        cx, cy = rng.randint(0, width // 2), rng.randint(height // 2, height)
+        draw.ellipse((cx - r, cy - r, cx + r, cy + r), outline=(255, 255, 255, 60), width=4)
+    image = Image.alpha_composite(image, detail)
 
     buffer = io.BytesIO()
     image.convert("RGB").save(buffer, format="JPEG", quality=85)

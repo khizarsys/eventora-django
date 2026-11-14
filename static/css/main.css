@@ -10,6 +10,8 @@
   --bs-primary-rgb: 91, 75, 219;
   --bs-link-color: var(--ev-primary);
   --bs-link-hover-color: var(--ev-primary-dark);
+  --bs-link-color-rgb: 91, 75, 219;
+  --bs-link-hover-color-rgb: 69, 53, 196;
   --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --bs-body-color: var(--ev-ink);
 }
@@ -33,6 +35,21 @@ body { background: var(--ev-surface); }
   --bs-btn-active-bg: var(--ev-primary-dark);
 }
 .text-primary { color: var(--ev-primary) !important; }
+a { text-decoration-color: rgba(91, 75, 219, .35); }
+.breadcrumb a { text-decoration: none; }
+.pagination {
+  --bs-pagination-color: var(--ev-primary);
+  --bs-pagination-hover-color: var(--ev-primary-dark);
+  --bs-pagination-active-bg: var(--ev-primary);
+  --bs-pagination-active-border-color: var(--ev-primary);
+  --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(91, 75, 219, .2);
+}
+.nav-pills {
+  --bs-nav-pills-link-active-bg: var(--ev-primary);
+  --bs-nav-link-color: var(--ev-ink);
+  --bs-nav-link-hover-color: var(--ev-primary);
+}
+.alert-link { text-decoration: none; }
 .bg-primary-subtle { background-color: #ece9fc !important; }
 .form-control:focus, .form-select:focus {
   border-color: #a99ff0;
