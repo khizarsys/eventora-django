@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'events:list' %}">Events</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'events:list' %}?category={{ event.category.slug }}">{{ event.category.name }}</a></li>
+      <li class="breadcrumb-item active text-truncate" aria-current="page">{{ event.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="detail-hero mb-4">
+    {% if event.banner %}
+      <img src="{{ event.banner.url }}" alt="{{ event.title }}">
+    {% else %}
+      <div class="banner-fallback"><i class="bi {{ event.category.icon }}"></i></div>
+    {% endif %}
+  </div>
+
+  {% if not event.is_published %}
+    <div class="alert alert-warning"><i class="bi bi-eye-slash me-1"></i> This event is a draft and is only visible to you.</div>
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <span class="badge rounded-pill bg-primary-subtle text-primary mb-2"><i class="bi {{ event.category.icon }} me-1"></i>{{ event.category.name }}</span>
+      <h1 class="fw-bold mb-3">{{ event.title }}</h1>
+
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6 d-flex gap-3">
+          <span class="meta-icon"><i class="bi bi-calendar3"></i></span>
+          <div>
+            <div class="fw-semibold">{{ event.starts_at|date:"l, F j, Y" }}</div>
+            <div class="small text-secondary">{{ event.starts_at|date:"g:i A" }}{% if event.ends_at %} – {{ event.ends_at|date:"g:i A" }}{% endif %}</div>
+          </div>
+        </div>
+        <div class="col-sm-6 d-flex gap-3">
+          <span class="meta-icon"><i class="bi bi-geo-alt"></i></span>
+          <div>
+            <div class="fw-semibold">{{ event.venue }}</div>
+            <div class="small text-secondary">{{ event.city }}</div>
+          </div>
+        </div>
+        <div class="col-sm-6 d-flex gap-3">
+          <span class="meta-icon"><i class="bi bi-person-badge"></i></span>
+          <div>
+            <div class="fw-semibold">{{ event.organizer.get_full_name|default:event.organizer.username }}</div>
+            <div class="small text-secondary">Organizer</div>
+          </div>
+        </div>
+        <div class="col-sm-6 d-flex gap-3">
+          <span class="meta-icon"><i class="bi bi-people"></i></span>
+          <div>
+            <div class="fw-semibold">{{ event.total_seats|intcomma }} seats</div>
+            <div class="small text-secondary">{{ event.seats_left|intcomma }} still available</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="h5 fw-bold">About this event</h2>
+      <div class="text-secondary" style="white-space: pre-line;">{{ event.description }}</div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card p-4 sticky-booking">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <span class="h3 fw-bold mb-0">{% if event.is_free %}Free{% else %}PKR {{ event.price|floatformat:0|intcomma }}{% endif %}</span>
+          {% if not event.is_free %}<span class="text-secondary small">per seat</span>{% endif %}
+        </div>
+
+        <div class="d-flex justify-content-between small text-secondary mb-1">
+          <span>{{ event.seats_booked|intcomma }} booked</span><span>{{ event.seats_left|intcomma }} left</span>
+        </div>
+        <div class="progress mb-4" role="progressbar" aria-label="Seats booked" aria-valuenow="{{ event.occupancy_percent }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar" style="width: {{ event.occupancy_percent }}%"></div>
+        </div>
+
+        {% if user_bookings %}
+          <div class="alert alert-success small py-2">
+            <i class="bi bi-check-circle me-1"></i> You have
+            {% for b in user_bookings %}<a href="{% url 'bookings:confirmation' b.reference %}" class="alert-link">{{ b.seats }} seat{{ b.seats|pluralize }} ({{ b.reference }})</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+            for this event.
+          </div>
+        {% endif %}
+
+        {% if event.is_past %}
+          <button class="btn btn-secondary w-100" disabled>This event has ended</button>
+        {% elif event.is_sold_out %}
+          <button class="btn btn-secondary w-100" disabled>Sold out</button>
+        {% elif not user.is_authenticated %}
+          <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="btn btn-primary w-100 py-2">Log in to book</a>
+          <p class="small text-secondary text-center mt-2 mb-0">No account? <a href="{% url 'accounts:signup' %}">Sign up free</a></p>
+        {% elif user == event.organizer %}
+          <a href="{% url 'events:update' event.slug %}" class="btn btn-outline-primary w-100 mb-2"><i class="bi bi-pencil me-1"></i> Edit event</a>
+          <a href="{% url 'events:bookings' event.slug %}" class="btn btn-outline-secondary w-100"><i class="bi bi-people me-1"></i> View bookings</a>
+        {% elif user.is_organizer %}
+          <p class="small text-secondary mb-0">Organizer accounts cannot book seats. Sign in with an attendee account to book.</p>
+        {% else %}
+          <form method="post" action="{% url 'bookings:create' event.slug %}">
+            {% csrf_token %}
+            <label for="seats" class="form-label fw-medium">Number of seats</label>
+            <select name="seats" id="seats" class="form-select mb-3">
+              {% for n in seat_options %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary w-100 py-2"><i class="bi bi-ticket-perforated me-1"></i> Book now</button>
+          </form>
+          <p class="small text-secondary text-center mt-2 mb-0">Free cancellation until the event starts.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if related_events %}
+    <h2 class="h4 fw-bold mt-5 mb-3">More {{ event.category.name|lower }} events</h2>
+    <div class="row g-4">
+      {% for event in related_events %}
+        <div class="col-md-6 col-lg-4">{% include "partials/event_card.html" %}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

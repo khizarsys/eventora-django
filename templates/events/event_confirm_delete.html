@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Delete event{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="card mx-auto p-4 p-md-5 text-center" style="max-width: 520px;">
+    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2.5rem;"></i>
+    <h1 class="h4 fw-bold mt-2">Delete “{{ event.title }}”?</h1>
+    <p class="text-secondary">
+      This permanently removes the event
+      {% if event.seats_booked %}and cancels <strong>{{ event.seats_booked }} booked seat{{ event.seats_booked|pluralize }}</strong>{% endif %}.
+      This action cannot be undone.
+    </p>
+    <form method="post" class="d-flex gap-2 justify-content-center">
+      {% csrf_token %}
+      <a href="{{ event.get_absolute_url }}" class="btn btn-outline-secondary">Keep event</a>
+      <button type="submit" class="btn btn-danger">Yes, delete it</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

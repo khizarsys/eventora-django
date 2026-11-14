@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Organizer dashboard{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-0">Organizer dashboard</h1>
+      <p class="text-secondary mb-0">Welcome back, {{ user.first_name|default:user.username }}. Here is how your events are doing.</p>
+    </div>
+    <a href="{% url 'events:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Create event</a>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card stat-card p-3 h-100 d-flex flex-row align-items-center gap-3">
+        <span class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-calendar-event"></i></span>
+        <div><div class="stat-value">{{ stats.events }}</div><div class="small text-secondary">Total events</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card stat-card p-3 h-100 d-flex flex-row align-items-center gap-3">
+        <span class="stat-icon bg-info-subtle text-info-emphasis"><i class="bi bi-hourglass-split"></i></span>
+        <div><div class="stat-value">{{ stats.upcoming }}</div><div class="small text-secondary">Upcoming</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card stat-card p-3 h-100 d-flex flex-row align-items-center gap-3">
+        <span class="stat-icon bg-success-subtle text-success"><i class="bi bi-ticket-perforated"></i></span>
+        <div><div class="stat-value">{{ stats.seats_sold|intcomma }}</div><div class="small text-secondary">Seats booked</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card stat-card p-3 h-100 d-flex flex-row align-items-center gap-3">
+        <span class="stat-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-cash-stack"></i></span>
+        <div><div class="stat-value">{{ stats.revenue|floatformat:0|intcomma }}</div><div class="small text-secondary">Revenue (PKR)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header bg-white border-0 pt-3"><h2 class="h5 fw-bold mb-0">My events</h2></div>
+    {% if events %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light small text-secondary">
+            <tr><th>Event</th><th>Date</th><th class="text-center">Bookings</th><th style="min-width: 180px;">Seats</th><th>Status</th><th class="text-end">Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+              <tr>
+                <td>
+                  <a href="{{ event.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ event.title }}</a>
+                  <div class="small text-secondary">{{ event.category.name }} · {{ event.city }}</div>
+                </td>
+                <td class="small text-nowrap">{{ event.starts_at|date:"M j, Y" }}<div class="text-secondary">{{ event.starts_at|date:"g:i A" }}</div></td>
+                <td class="text-center fw-semibold">{{ event.booking_count }}</td>
+                <td>
+                  <div class="d-flex justify-content-between small"><span>{{ event.seats_booked }} / {{ event.total_seats }}</span><span class="text-secondary">{{ event.seats_left }} left</span></div>
+                  <div class="progress mt-1"><div class="progress-bar" style="width: {{ event.occupancy_percent }}%"></div></div>
+                </td>
+                <td>
+                  {% if event.is_past %}<span class="badge text-bg-secondary">Ended</span>
+                  {% elif not event.is_published %}<span class="badge text-bg-warning">Draft</span>
+                  {% elif event.is_sold_out %}<span class="badge text-bg-danger">Sold out</span>
+                  {% else %}<span class="badge text-bg-success">On sale</span>{% endif %}
+                </td>
+                <td class="text-end text-nowrap">
+                  <a href="{% url 'events:bookings' event.slug %}" class="btn btn-sm btn-outline-secondary" title="Bookings"><i class="bi bi-people"></i></a>
+                  <a href="{% url 'events:update' event.slug %}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'events:delete' event.slug %}" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <i class="bi bi-calendar-plus d-block mb-3"></i>
+        <h3 class="h5 text-body">You have not created any events yet</h3>
+        <a href="{% url 'events:create' %}" class="btn btn-primary mt-2">Create your first event</a>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if recent_bookings %}
+    <div class="card">
+      <div class="card-header bg-white border-0 pt-3"><h2 class="h5 fw-bold mb-0">Recent bookings</h2></div>
+      <ul class="list-group list-group-flush">
+        {% for booking in recent_bookings %}
+          <li class="list-group-item d-flex justify-content-between align-items-center px-4">
+            <div>
+              <span class="fw-semibold">{{ booking.attendee.get_full_name|default:booking.attendee.username }}</span>
+              <span class="text-secondary">booked {{ booking.seats }} seat{{ booking.seats|pluralize }} for</span>
+              <a href="{{ booking.event.get_absolute_url }}" class="text-decoration-none">{{ booking.event.title }}</a>
+            </div>
+            <span class="small text-secondary text-nowrap ms-3">{{ booking.created_at|naturaltime }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

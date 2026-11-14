@@ -1,0 +1,37 @@
+{% load humanize %}
+<div class="card event-card h-100">
+  <div class="event-banner">
+    {% if event.banner %}
+      <img src="{{ event.banner.url }}" alt="{{ event.title }}" loading="lazy">
+    {% else %}
+      <div class="banner-fallback"><i class="bi {{ event.category.icon }}"></i></div>
+    {% endif %}
+    <span class="badge-float badge rounded-pill text-bg-light"><i class="bi {{ event.category.icon }} me-1"></i>{{ event.category.name }}</span>
+    <span class="price-float badge rounded-pill {% if event.is_free %}text-bg-success{% else %}text-bg-dark{% endif %}">
+      {% if event.is_free %}Free{% else %}PKR {{ event.price|floatformat:0|intcomma }}{% endif %}
+    </span>
+  </div>
+  <div class="card-body d-flex gap-3">
+    <div class="date-chip">
+      <span class="month">{{ event.starts_at|date:"M" }}</span>
+      <span class="day">{{ event.starts_at|date:"j" }}</span>
+    </div>
+    <div class="min-w-0">
+      <h3 class="h6 fw-bold mb-1">
+        <a href="{{ event.get_absolute_url }}" class="stretched-link text-reset text-decoration-none">{{ event.title }}</a>
+      </h3>
+      <div class="small text-secondary mb-2">
+        <i class="bi bi-clock me-1"></i>{{ event.starts_at|date:"D, g:i A" }}
+        <span class="mx-1">·</span>
+        <i class="bi bi-geo-alt me-1"></i>{{ event.city }}
+      </div>
+      {% if event.is_sold_out %}
+        <span class="badge text-bg-danger">Sold out</span>
+      {% elif event.seats_left <= 10 %}
+        <span class="badge text-bg-warning">Only {{ event.seats_left }} seat{{ event.seats_left|pluralize }} left</span>
+      {% else %}
+        <span class="small text-secondary">{{ event.seats_left|intcomma }} seats available</span>
+      {% endif %}
+    </div>
+  </div>
+</div>

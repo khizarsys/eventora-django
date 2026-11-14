@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Discover events{% endblock %}
+{% block content %}
+<section class="hero pt-5 pb-5">
+  <div class="container py-lg-4">
+    <div class="row">
+      <div class="col-lg-8">
+        <span class="badge rounded-pill bg-white bg-opacity-25 mb-3 px-3 py-2">Concerts · Tech · Food · Sports · Workshops</span>
+        <h1 class="display-5 fw-bold mb-3">Find your next unforgettable experience</h1>
+        <p class="lead mb-4">Browse upcoming events across Pakistan, reserve your seats in seconds and keep every ticket in one place.</p>
+      </div>
+    </div>
+
+    <form method="get" class="search-panel bg-white p-3 text-body" role="search">
+      <div class="row g-2 align-items-center">
+        <div class="col-lg-4">
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            {{ form.q }}
+          </div>
+        </div>
+        <div class="col-6 col-lg-2">{{ form.category }}</div>
+        <div class="col-6 col-lg-2">{{ form.when }}</div>
+        <div class="col-6 col-lg-2">{{ form.date }}</div>
+        <div class="col-6 col-lg-1">{{ form.price }}</div>
+        <div class="col-lg-1 d-grid">
+          <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div class="container mt-4">
+  <div class="d-flex gap-2 overflow-auto pb-2 mb-3">
+    <a href="{% url 'events:list' %}" class="category-pill {% if not active_category %}active{% endif %}">All</a>
+    {% for category in categories %}
+      <a href="?category={{ category.slug }}" class="category-pill {% if active_category == category.slug %}active{% endif %}">
+        <i class="bi {{ category.icon }} me-1"></i>{{ category.name }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 fw-bold mb-0">{% if is_filtered %}Search results{% else %}Upcoming events{% endif %}</h2>
+    <span class="text-secondary small">
+      {{ page_obj.paginator.count }} event{{ page_obj.paginator.count|pluralize }}
+      {% if is_filtered %}· <a href="{% url 'events:list' %}">Clear filters</a>{% endif %}
+    </span>
+  </div>
+
+  {% if page_obj.object_list %}
+    <div class="row g-4">
+      {% for event in page_obj %}
+        <div class="col-md-6 col-lg-4">{% include "partials/event_card.html" %}</div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+      <nav class="mt-5" aria-label="Event pages">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+              <a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+            </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="card empty-state">
+      <i class="bi bi-calendar-x d-block mb-3"></i>
+      <h3 class="h5 text-body">No events match your search</h3>
+      <p class="mb-3">Try a different keyword, category or date.</p>
+      <div><a href="{% url 'events:list' %}" class="btn btn-outline-primary">Show all events</a></div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

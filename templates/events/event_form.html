@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{% if event %}Edit event{% else %}Create event{% endif %}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 860px;">
+  <a href="{% if event %}{{ event.get_absolute_url }}{% else %}{% url 'events:dashboard' %}{% endif %}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back</a>
+  <h1 class="h3 fw-bold mt-2 mb-4">{% if event %}Edit “{{ event.title }}”{% else %}Create a new event{% endif %}</h1>
+
+  <form method="post" enctype="multipart/form-data" novalidate class="card p-4 p-md-5">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+    <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">Basics</h2>
+    <div class="row">
+      <div class="col-md-8">{% include "partials/form_field.html" with field=form.title %}</div>
+      <div class="col-md-4">{% include "partials/form_field.html" with field=form.category %}</div>
+    </div>
+    {% include "partials/form_field.html" with field=form.description %}
+
+    <h2 class="h6 text-uppercase text-secondary fw-bold mt-3 mb-3">Date &amp; location</h2>
+    <div class="row">
+      <div class="col-md-6">{% include "partials/form_field.html" with field=form.starts_at %}</div>
+      <div class="col-md-6">{% include "partials/form_field.html" with field=form.ends_at %}</div>
+      <div class="col-md-8">{% include "partials/form_field.html" with field=form.venue %}</div>
+      <div class="col-md-4">{% include "partials/form_field.html" with field=form.city %}</div>
+    </div>
+
+    <h2 class="h6 text-uppercase text-secondary fw-bold mt-3 mb-3">Tickets &amp; media</h2>
+    <div class="row">
+      <div class="col-md-6">{% include "partials/form_field.html" with field=form.total_seats %}</div>
+      <div class="col-md-6">{% include "partials/form_field.html" with field=form.price %}</div>
+    </div>
+    {% include "partials/form_field.html" with field=form.banner %}
+
+    <div class="form-check form-switch mb-4">
+      {{ form.is_published }}
+      <label class="form-check-label" for="{{ form.is_published.id_for_label }}">{{ form.is_published.label }}</label>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary px-4">{% if event %}Save changes{% else %}Create event{% endif %}</button>
+      <a href="{% if event %}{{ event.get_absolute_url }}{% else %}{% url 'events:dashboard' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+      {% if event %}
+        <a href="{% url 'events:delete' event.slug %}" class="btn btn-outline-danger ms-auto"><i class="bi bi-trash"></i> Delete</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}
