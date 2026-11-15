@@ -10,6 +10,11 @@
 ![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=black)
 ![Tests](https://img.shields.io/badge/tests-37%20passing-success)
 
+### 🔗 [Live demo: eventora-2usq.onrender.com](https://eventora-2usq.onrender.com/)
+
+> Hosted on Render's free plan, so the first visit after a period of inactivity can take about a minute to wake up.
+> Try it with the demo accounts: organizer `ayesha.events` / attendee `ali.raza` (password `Eventora@123`).
+
 Eventora is a full-stack event management and booking platform built with Django. Organizers publish events and track their bookings. Attendees browse, search and reserve seats, and the system makes sure no event is ever overbooked.
 
 ---
@@ -210,7 +215,7 @@ The repository includes a [Render Blueprint](render.yaml) that provisions a **we
    - `DJANGO_SUPERUSER_EMAIL`: your admin email
    - `DJANGO_SUPERUSER_PASSWORD`: a strong password
 4. Click **Apply**. Render creates the database and runs `build.sh` (install, `collectstatic`, `migrate`, create admin, seed demo data), then starts Gunicorn.
-5. Open the `https://<your-service>.onrender.com` URL. The admin lives at `/admin`.
+5. Open the service URL (this project runs at https://eventora-2usq.onrender.com). The admin lives at `/admin`.
 
 These variables are set automatically by the Blueprint, so you don't need to add them yourself:
 
